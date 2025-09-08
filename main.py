@@ -59,11 +59,13 @@ class RangeApp:
         tk.Button(self.root, text="Generate", command=self.generate).grid(row=3, column=0, columnspan=2, pady=10)
 
         # Table for results
-        self.table = ttk.Treeview(self.root, columns=("Value", "Morning", "Noon", "Evening"), show="headings", height=20)
+        self.table = ttk.Treeview(self.root, columns=("Count", "Value", "Morning", "Noon", "Evening"), show="headings", height=20)
+        self.table.heading("Count", text="#")
         self.table.heading("Value", text="Value")
         self.table.heading("Morning", text="Morning Portion")
         self.table.heading("Noon", text="Noon Portion")
         self.table.heading("Evening", text="Evening Portion")
+        self.table.column("Count", width=50, anchor="center")
         self.table.column("Value", width=100, anchor="center")
         self.table.column("Morning", width=150, anchor="center")
         self.table.column("Noon", width=150, anchor="center")
@@ -98,7 +100,7 @@ class RangeApp:
         step = (end - start) / (count - 1)
         values = [round(start + i * step) for i in range(count)]
         self.table.delete(*self.table.get_children())
-        for val in values:
+        for idx, val in enumerate(values, 1):
             found = False
             for x in range(5, val//2 + 1, 5):
                 y = val - 2*x
@@ -112,11 +114,11 @@ class RangeApp:
                         morning = x
                         noon = x
                         evening = y
-                    self.table.insert("", "end", values=(val, morning, noon, evening))
+                    self.table.insert("", "end", values=(idx, val, morning, noon, evening))
                     found = True
                     break
             if not found:
-                self.table.insert("", "end", values=(val, "-", "-", "-"))
+                self.table.insert("", "end", values=(idx, val, "-", "-", "-"))
 
 
 if __name__ == "__main__":
