@@ -39,6 +39,7 @@ class RangeApp:
         y = (screen_height // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
+        # State variables
         self.last_portion_starts = []
         self.last_portion_ends = []
         self.portion_start_grams_var = tk.StringVar(self.root)
@@ -46,34 +47,41 @@ class RangeApp:
         self.start_date_var = tk.StringVar(self.root)
         self.end_date_var = tk.StringVar(self.root)
 
+        # Build UI
         self._create_widgets()
 
     def _create_widgets(self):
+        # Portion start
         tk.Label(self.root, text="Dog food portion at start (grams):").grid(row=0, column=0, padx=10, pady=10)
         self.portion_start_entry = ttk.Combobox(self.root, textvariable=self.portion_start_grams_var, values=self.last_portion_starts)
         self.portion_start_entry.grid(row=0, column=1, padx=10, pady=10)
 
+        # Portion end
         tk.Label(self.root, text="Dog food portion at end (grams):").grid(row=1, column=0, padx=10, pady=10)
         self.portion_end_entry = ttk.Combobox(self.root, textvariable=self.portion_end_grams_var, values=self.last_portion_ends)
         self.portion_end_entry.grid(row=1, column=1, padx=10, pady=10)
 
+        # Start date
         tk.Label(self.root, text="Start date (DD-MM-YYYY):").grid(row=2, column=0, padx=10, pady=10)
         self.start_date_entry = DateEntry(self.root, textvariable=self.start_date_var, date_pattern='dd-mm-yyyy')
         self.start_date_entry.grid(row=2, column=1, padx=10, pady=10)
 
+        # End date
         tk.Label(self.root, text="End date (DD-MM-YYYY):").grid(row=3, column=0, padx=10, pady=10)
         self.end_date_entry = DateEntry(self.root, textvariable=self.end_date_var, date_pattern='dd-mm-yyyy')
         self.end_date_entry.grid(row=3, column=1, padx=10, pady=10)
 
+        # Generate button
         tk.Button(self.root, text="Generate", command=self.generate).grid(row=4, column=0, columnspan=2, pady=10)
 
-        self.table = ttk.Treeview(self.root, columns=("Count", "Value", "Morning", "Noon", "Evening"), show="headings", height=20)
-        self.table.heading("Count", text="#")
+        # Results table
+        self.table = ttk.Treeview(self.root, columns=("Date", "Value", "Morning", "Noon", "Evening"), show="headings", height=20)
+        self.table.heading("Date", text="Date")
         self.table.heading("Value", text="Value")
         self.table.heading("Morning", text="Morning Portion")
         self.table.heading("Noon", text="Noon Portion")
         self.table.heading("Evening", text="Evening Portion")
-        self.table.column("Count", width=50, anchor="center")
+        self.table.column("Date", width=100, anchor="center")
         self.table.column("Value", width=100, anchor="center")
         self.table.column("Morning", width=150, anchor="center")
         self.table.column("Noon", width=150, anchor="center")
@@ -114,7 +122,9 @@ class RangeApp:
         step = (portion_end_grams - portion_start_grams) / (days - 1)
         values = [round(portion_start_grams + i * step) for i in range(days)]
         self.table.delete(*self.table.get_children())
-        for idx, val in enumerate(values, 1):
+        date_list = [(start_date + datetime.timedelta(days=i)).strftime("%d-%m-%Y") for i in range(days)]
+        for idx, val in enumerate(values):
+            row_date = date_list[idx]
             found = False
             for x in range(5, val//2 + 1, 5):
                 y = val - 2*x
@@ -128,11 +138,11 @@ class RangeApp:
                         morning = x
                         noon = x
                         evening = y
-                    self.table.insert("", "end", values=(idx, val, morning, noon, evening))
+                    self.table.insert("", "end", values=(row_date, val, morning, noon, evening))
                     found = True
                     break
             if not found:
-                self.table.insert("", "end", values=(idx, val, "-", "-", "-"))
+                self.table.insert("", "end", values=(row_date, val, "-", "-", "-"))
 
 
 if __name__ == "__main__":
