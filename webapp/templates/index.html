@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dog Food Portion Range Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background: #f2f2f2; }
+        .highlight { background: #ffe066; }
+    </style>
+</head>
+<body>
+    <h1>Dog Food Portion Range Calculator</h1>
+    <form method="post">
+        <label>Dog food portion at start (grams): <input type="number" name="portion_start_grams" required></label><br>
+        <label>Dog food portion at end (grams): <input type="number" name="portion_end_grams" required></label><br>
+        <label>Start date: <input type="date" name="start_date" required></label><br>
+        <label>End date: <input type="date" name="end_date" required></label><br>
+        <label>Highlight weekday:
+            <select name="highlight_weekday">
+                <option value="">--None--</option>
+                {% for day in weekdays %}
+                <option value="{{ day }}" {% if highlight == day %}selected{% endif %}>{{ day }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
+        <button type="submit">Generate</button>
+    </form>
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+    {% if result %}
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Value</th>
+                <th>Morning</th>
+                <th>Noon</th>
+                <th>Evening</th>
+                <th>Weekday</th>
+            </tr>
+            {% for row in result %}
+            <tr {% if highlight and row.weekday == highlight %}class="highlight"{% endif %}>
+                <td>{{ row.date }}</td>
+                <td>{{ row.value }}</td>
+                <td>{{ row.morning }}</td>
+                <td>{{ row.noon }}</td>
+                <td>{{ row.evening }}</td>
+                <td>{{ row.weekday }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>
