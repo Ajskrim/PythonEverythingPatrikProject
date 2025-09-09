@@ -1,3 +1,5 @@
 # Add your project dependencies here
 # tkinter (standard library, but listed for clarity)
 tkcalendar
+flask
+gunicorn
