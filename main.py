@@ -86,9 +86,17 @@ class RangeApp:
         self.table.column("Morning", width=150, anchor="center")
         self.table.column("Noon", width=150, anchor="center")
         self.table.column("Evening", width=150, anchor="center")
-        self.table.grid(row=5, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
-        self.root.grid_rowconfigure(5, weight=1)
+        # Weekday selection
+        tk.Label(self.root, text="Highlight weekday:").grid(row=5, column=0, padx=10, pady=10)
+        self.weekday_var = tk.StringVar(self.root)
+        self.weekday_dropdown = ttk.Combobox(self.root, textvariable=self.weekday_var, values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], state="readonly")
+        self.weekday_dropdown.grid(row=5, column=1, padx=10, pady=10)
+        self.weekday_dropdown.bind("<<ComboboxSelected>>", self.highlight_weekdays)
+
+        self.table.grid(row=6, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        self.root.grid_rowconfigure(6, weight=1)
         self.root.grid_columnconfigure(1, weight=1)
 
     def update_dropdowns(self, portion_start, portion_end):
@@ -122,9 +130,10 @@ class RangeApp:
         step = (portion_end_grams - portion_start_grams) / (days - 1)
         values = [round(portion_start_grams + i * step) for i in range(days)]
         self.table.delete(*self.table.get_children())
-        date_list = [(start_date + datetime.timedelta(days=i)).strftime("%d-%m-%Y") for i in range(days)]
+        date_list = [(start_date + datetime.timedelta(days=i)) for i in range(days)]
         for idx, val in enumerate(values):
             row_date = date_list[idx]
+            date_str = row_date.strftime("%d-%m-%Y")
             found = False
             for x in range(5, val//2 + 1, 5):
                 y = val - 2*x
@@ -138,11 +147,21 @@ class RangeApp:
                         morning = x
                         noon = x
                         evening = y
-                    self.table.insert("", "end", values=(row_date, val, morning, noon, evening))
+                    self.table.insert("", "end", values=(date_str, val, morning, noon, evening), tags=(row_date.strftime("%A"),))
                     found = True
                     break
             if not found:
-                self.table.insert("", "end", values=(row_date, val, "-", "-", "-"))
+                self.table.insert("", "end", values=(date_str, val, "-", "-", "-"), tags=(row_date.strftime("%A"),))
+    def highlight_weekdays(self, event=None):
+        selected_weekday = self.weekday_var.get()
+        for item in self.table.get_children():
+            tags = self.table.item(item, "tags")
+            if selected_weekday in tags:
+                self.table.item(item, tags=(selected_weekday,))
+                self.table.tag_configure(selected_weekday, background="#ffe066")
+            else:
+                self.table.item(item, tags=tags)
+                self.table.tag_configure(tags[0], background="white")
 
 
 if __name__ == "__main__":
