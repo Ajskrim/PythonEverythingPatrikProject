@@ -23,6 +23,7 @@ def main():
 # --- GUI Implementation ---
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkcalendar import DateEntry
 
 class RangeApp:
     def __init__(self, root):
@@ -40,11 +41,10 @@ class RangeApp:
 
         self.last_portion_starts = []
         self.last_portion_ends = []
-
-        self.portion_start_grams_var = tk.StringVar()
-        self.portion_end_grams_var = tk.StringVar()
-        self.start_date_var = tk.StringVar()
-        self.end_date_var = tk.StringVar()
+        self.portion_start_grams_var = tk.StringVar(self.root)
+        self.portion_end_grams_var = tk.StringVar(self.root)
+        self.start_date_var = tk.StringVar(self.root)
+        self.end_date_var = tk.StringVar(self.root)
 
         self._create_widgets()
 
@@ -57,11 +57,13 @@ class RangeApp:
         self.portion_end_entry = ttk.Combobox(self.root, textvariable=self.portion_end_grams_var, values=self.last_portion_ends)
         self.portion_end_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        tk.Label(self.root, text="Start date (YYYY-MM-DD):").grid(row=2, column=0, padx=10, pady=10)
-        tk.Entry(self.root, textvariable=self.start_date_var).grid(row=2, column=1, padx=10, pady=10)
+        tk.Label(self.root, text="Start date (DD-MM-YYYY):").grid(row=2, column=0, padx=10, pady=10)
+        self.start_date_entry = DateEntry(self.root, textvariable=self.start_date_var, date_pattern='dd-mm-yyyy')
+        self.start_date_entry.grid(row=2, column=1, padx=10, pady=10)
 
-        tk.Label(self.root, text="End date (YYYY-MM-DD):").grid(row=3, column=0, padx=10, pady=10)
-        tk.Entry(self.root, textvariable=self.end_date_var).grid(row=3, column=1, padx=10, pady=10)
+        tk.Label(self.root, text="End date (DD-MM-YYYY):").grid(row=3, column=0, padx=10, pady=10)
+        self.end_date_entry = DateEntry(self.root, textvariable=self.end_date_var, date_pattern='dd-mm-yyyy')
+        self.end_date_entry.grid(row=3, column=1, padx=10, pady=10)
 
         tk.Button(self.root, text="Generate", command=self.generate).grid(row=4, column=0, columnspan=2, pady=10)
 
@@ -96,10 +98,10 @@ class RangeApp:
         try:
             portion_start_grams = int(self.portion_start_grams_var.get())
             portion_end_grams = int(self.portion_end_grams_var.get())
-            start_date = datetime.datetime.strptime(self.start_date_var.get(), "%Y-%m-%d")
-            end_date = datetime.datetime.strptime(self.end_date_var.get(), "%Y-%m-%d")
+            start_date = datetime.datetime.strptime(self.start_date_var.get(), "%d-%m-%Y")
+            end_date = datetime.datetime.strptime(self.end_date_var.get(), "%d-%m-%Y")
         except ValueError:
-            messagebox.showerror("Input Error", "Please enter valid numbers and dates in YYYY-MM-DD format.")
+            messagebox.showerror("Input Error", "Please enter valid numbers and dates in DD-MM-YYYY format.")
             return
         if end_date <= start_date:
             messagebox.showerror("Input Error", "End date must be after start date.")
