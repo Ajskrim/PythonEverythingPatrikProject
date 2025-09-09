@@ -43,7 +43,8 @@ class RangeApp:
 
         self.portion_start_grams_var = tk.StringVar()
         self.portion_end_grams_var = tk.StringVar()
-        self.days_var = tk.StringVar()
+        self.start_date_var = tk.StringVar()
+        self.end_date_var = tk.StringVar()
 
         self._create_widgets()
 
@@ -56,10 +57,13 @@ class RangeApp:
         self.portion_end_entry = ttk.Combobox(self.root, textvariable=self.portion_end_grams_var, values=self.last_portion_ends)
         self.portion_end_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        tk.Label(self.root, text="Number of days in period:").grid(row=2, column=0, padx=10, pady=10)
-        tk.Entry(self.root, textvariable=self.days_var).grid(row=2, column=1, padx=10, pady=10)
+        tk.Label(self.root, text="Start date (YYYY-MM-DD):").grid(row=2, column=0, padx=10, pady=10)
+        tk.Entry(self.root, textvariable=self.start_date_var).grid(row=2, column=1, padx=10, pady=10)
 
-        tk.Button(self.root, text="Generate", command=self.generate).grid(row=3, column=0, columnspan=2, pady=10)
+        tk.Label(self.root, text="End date (YYYY-MM-DD):").grid(row=3, column=0, padx=10, pady=10)
+        tk.Entry(self.root, textvariable=self.end_date_var).grid(row=3, column=1, padx=10, pady=10)
+
+        tk.Button(self.root, text="Generate", command=self.generate).grid(row=4, column=0, columnspan=2, pady=10)
 
         self.table = ttk.Treeview(self.root, columns=("Count", "Value", "Morning", "Noon", "Evening"), show="headings", height=20)
         self.table.heading("Count", text="#")
@@ -72,9 +76,9 @@ class RangeApp:
         self.table.column("Morning", width=150, anchor="center")
         self.table.column("Noon", width=150, anchor="center")
         self.table.column("Evening", width=150, anchor="center")
-        self.table.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        self.table.grid(row=5, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
-        self.root.grid_rowconfigure(4, weight=1)
+        self.root.grid_rowconfigure(5, weight=1)
         self.root.grid_columnconfigure(1, weight=1)
 
     def update_dropdowns(self, portion_start, portion_end):
@@ -88,15 +92,21 @@ class RangeApp:
             self.portion_end_entry["values"] = self.last_portion_ends
 
     def generate(self):
+        import datetime
         try:
             portion_start_grams = int(self.portion_start_grams_var.get())
             portion_end_grams = int(self.portion_end_grams_var.get())
-            days = int(self.days_var.get())
+            start_date = datetime.datetime.strptime(self.start_date_var.get(), "%Y-%m-%d")
+            end_date = datetime.datetime.strptime(self.end_date_var.get(), "%Y-%m-%d")
         except ValueError:
-            messagebox.showerror("Input Error", "Please enter valid integers.")
+            messagebox.showerror("Input Error", "Please enter valid numbers and dates in YYYY-MM-DD format.")
             return
+        if end_date <= start_date:
+            messagebox.showerror("Input Error", "End date must be after start date.")
+            return
+        days = (end_date - start_date).days + 1
         if days < 2:
-            messagebox.showerror("Input Error", "Number of days must be at least 2.")
+            messagebox.showerror("Input Error", "Date range must be at least 2 days.")
             return
         self.update_dropdowns(str(portion_start_grams), str(portion_end_grams))
         step = (portion_end_grams - portion_start_grams) / (days - 1)
