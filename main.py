@@ -27,7 +27,7 @@ from tkinter import ttk, messagebox
 class RangeApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Range Generator")
+        self.root.title("Dog Food Portion Range Calculator")
 
         # Center and resize window to 60% of screen
         screen_width = self.root.winfo_screenwidth()
@@ -38,27 +38,29 @@ class RangeApp:
         y = (screen_height // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
-        self.last_mins = []
-        self.last_maxs = []
+        self.last_portion_starts = []
+        self.last_portion_ends = []
 
-        self.min_var = tk.StringVar()
-        self.max_var = tk.StringVar()
-        self.count_var = tk.StringVar()
+        self.portion_start_grams_var = tk.StringVar()
+        self.portion_end_grams_var = tk.StringVar()
+        self.days_var = tk.StringVar()
 
-        tk.Label(self.root, text="Start of range:").grid(row=0, column=0, padx=10, pady=10)
-        self.min_entry = ttk.Combobox(self.root, textvariable=self.min_var, values=self.last_mins)
-        self.min_entry.grid(row=0, column=1, padx=10, pady=10)
+        self._create_widgets()
 
-        tk.Label(self.root, text="End of range:").grid(row=1, column=0, padx=10, pady=10)
-        self.max_entry = ttk.Combobox(self.root, textvariable=self.max_var, values=self.last_maxs)
-        self.max_entry.grid(row=1, column=1, padx=10, pady=10)
+    def _create_widgets(self):
+        tk.Label(self.root, text="Dog food portion at start (grams):").grid(row=0, column=0, padx=10, pady=10)
+        self.portion_start_entry = ttk.Combobox(self.root, textvariable=self.portion_start_grams_var, values=self.last_portion_starts)
+        self.portion_start_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        tk.Label(self.root, text="How many values:").grid(row=2, column=0, padx=10, pady=10)
-        tk.Entry(self.root, textvariable=self.count_var).grid(row=2, column=1, padx=10, pady=10)
+        tk.Label(self.root, text="Dog food portion at end (grams):").grid(row=1, column=0, padx=10, pady=10)
+        self.portion_end_entry = ttk.Combobox(self.root, textvariable=self.portion_end_grams_var, values=self.last_portion_ends)
+        self.portion_end_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        tk.Label(self.root, text="Number of days in period:").grid(row=2, column=0, padx=10, pady=10)
+        tk.Entry(self.root, textvariable=self.days_var).grid(row=2, column=1, padx=10, pady=10)
 
         tk.Button(self.root, text="Generate", command=self.generate).grid(row=3, column=0, columnspan=2, pady=10)
 
-        # Table for results
         self.table = ttk.Treeview(self.root, columns=("Count", "Value", "Morning", "Noon", "Evening"), show="headings", height=20)
         self.table.heading("Count", text="#")
         self.table.heading("Value", text="Value")
@@ -75,30 +77,30 @@ class RangeApp:
         self.root.grid_rowconfigure(4, weight=1)
         self.root.grid_columnconfigure(1, weight=1)
 
-    def update_dropdowns(self, min_val, max_val):
-        if min_val not in self.last_mins:
-            self.last_mins.insert(0, min_val)
-            self.last_mins = self.last_mins[:5]
-            self.min_entry["values"] = self.last_mins
-        if max_val not in self.last_maxs:
-            self.last_maxs.insert(0, max_val)
-            self.last_maxs = self.last_maxs[:5]
-            self.max_entry["values"] = self.last_maxs
+    def update_dropdowns(self, portion_start, portion_end):
+        if portion_start not in self.last_portion_starts:
+            self.last_portion_starts.insert(0, portion_start)
+            self.last_portion_starts = self.last_portion_starts[:5]
+            self.portion_start_entry["values"] = self.last_portion_starts
+        if portion_end not in self.last_portion_ends:
+            self.last_portion_ends.insert(0, portion_end)
+            self.last_portion_ends = self.last_portion_ends[:5]
+            self.portion_end_entry["values"] = self.last_portion_ends
 
     def generate(self):
         try:
-            start = int(self.min_var.get())
-            end = int(self.max_var.get())
-            count = int(self.count_var.get())
+            portion_start_grams = int(self.portion_start_grams_var.get())
+            portion_end_grams = int(self.portion_end_grams_var.get())
+            days = int(self.days_var.get())
         except ValueError:
             messagebox.showerror("Input Error", "Please enter valid integers.")
             return
-        if count < 2:
-            messagebox.showerror("Input Error", "Count must be at least 2.")
+        if days < 2:
+            messagebox.showerror("Input Error", "Number of days must be at least 2.")
             return
-        self.update_dropdowns(str(start), str(end))
-        step = (end - start) / (count - 1)
-        values = [round(start + i * step) for i in range(count)]
+        self.update_dropdowns(str(portion_start_grams), str(portion_end_grams))
+        step = (portion_end_grams - portion_start_grams) / (days - 1)
+        values = [round(portion_start_grams + i * step) for i in range(days)]
         self.table.delete(*self.table.get_children())
         for idx, val in enumerate(values, 1):
             found = False
