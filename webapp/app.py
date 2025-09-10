@@ -1,3 +1,4 @@
+from flask import session, send_from_directory
 def calculate_portions(portion_start_grams, portion_end_grams, start_date, duration_months):
     year = start_date.year
     month = start_date.month + duration_months
@@ -54,6 +55,7 @@ from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
+app.secret_key = 'your-very-secret-key-12345'
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 @app.route('/upload_image', methods=['POST'])
@@ -68,7 +70,8 @@ def upload_image():
     os.makedirs(upload_folder, exist_ok=True)
     image_path = os.path.join(upload_folder, image.filename)
     image.save(image_path)
-    return f"Image uploaded: {image.filename}", 200
+    session['uploaded_image'] = image.filename
+    return redirect(url_for('index'))
     # Calculate end date by adding exact months
     year = start_date.year
     month = start_date.month + duration_months
@@ -124,9 +127,17 @@ def upload_image():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    import glob
     result = None
     error = None
     highlight = None
+    uploaded_image = session.get('uploaded_image')
+    # If no image in session, load first image from uploads as default
+    if not uploaded_image:
+        upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+        images = glob.glob(os.path.join(upload_folder, '*.*'))
+        if images:
+            uploaded_image = os.path.basename(images[0])
     if request.method == 'POST':
         try:
             portion_start_grams = int(request.form.get('portion_start_grams', 0))
@@ -141,7 +152,14 @@ def index():
         except Exception:
             error = "Please enter valid numbers, start date, and duration."
             return render_template('index.html', result=None, error=error, weekdays=WEEKDAYS)
-    return render_template('index.html', result=result, error=error, weekdays=WEEKDAYS, highlight=highlight)
+    from datetime import date
+    default_start_date = date.today().strftime('%Y-%m-%d')
+    default_weekday = 'Monday'
+    return render_template('index.html', result=result, error=error, weekdays=WEEKDAYS, highlight=highlight or default_weekday, uploaded_image=uploaded_image, default_start_date=default_start_date)
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+    return send_from_directory(upload_folder, filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
