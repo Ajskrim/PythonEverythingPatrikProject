@@ -13,11 +13,17 @@
 </head>
 <body>
     <h1>Dog Food Portion Range Calculator</h1>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <label>Dog food portion at start (grams): <input type="number" name="portion_start_grams" required></label><br>
         <label>Dog food portion at end (grams): <input type="number" name="portion_end_grams" required></label><br>
         <label>Start date: <input type="date" name="start_date" required></label><br>
-        <label>End date: <input type="date" name="end_date" required></label><br>
+        <label>Duration (months):
+            <select name="duration_months" required>
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
         <label>Highlight weekday:
             <select name="highlight_weekday">
                 <option value="">--None--</option>
@@ -27,6 +33,31 @@
             </select>
         </label><br>
         <button type="submit">Generate</button>
+    </form>
+    <form method="post" action="/upload_image" enctype="multipart/form-data" id="imageForm">
+        <label>Paste dog food label image from clipboard:</label>
+        <input type="file" id="imageInput" name="image" accept="image/*" style="display:none;">
+        <button type="button" onclick="pasteImage()">Paste Image</button>
+    </form>
+    <script>
+    async function pasteImage() {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+            for (const type of item.types) {
+                if (type.startsWith('image/')) {
+                    const blob = await item.getType(type);
+                    const fileInput = document.getElementById('imageInput');
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(new File([blob], 'clipboard.png', {type: blob.type}));
+                    fileInput.files = dataTransfer.files;
+                    document.getElementById('imageForm').submit();
+                    return;
+                }
+            }
+        }
+        alert('No image found in clipboard.');
+    }
+    </script>
     </form>
     {% if error %}
         <p style="color:red;">{{ error }}</p>
