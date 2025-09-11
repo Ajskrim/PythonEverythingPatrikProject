@@ -53,6 +53,8 @@ def calculate_portions(portion_start_grams, portion_end_grams, start_date, durat
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime, timedelta
 import os
+import pytesseract
+from PIL import Image
 
 app = Flask(__name__)
 app.secret_key = 'your-very-secret-key-12345'
@@ -71,6 +73,12 @@ def upload_image():
     image_path = os.path.join(upload_folder, image.filename)
     image.save(image_path)
     session['uploaded_image'] = image.filename
+    # Run OCR on uploaded image
+    try:
+        ocr_text = pytesseract.image_to_string(Image.open(image_path))
+    except Exception as e:
+        ocr_text = f"OCR error: {e}"
+    session['ocr_text'] = ocr_text
     return redirect(url_for('index'))
     # Calculate end date by adding exact months
     year = start_date.year
@@ -132,12 +140,22 @@ def index():
     error = None
     highlight = None
     uploaded_image = session.get('uploaded_image')
-    # If no image in session, load first image from uploads as default
+    ocr_text = None
+    # If no image in session, load first image from uploads as default and run OCR
     if not uploaded_image:
         upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
         images = glob.glob(os.path.join(upload_folder, '*.*'))
         if images:
             uploaded_image = os.path.basename(images[0])
+            # Run OCR on default image
+            try:
+                img_path = os.path.join(upload_folder, uploaded_image)
+                ocr_text = pytesseract.image_to_string(Image.open(img_path))
+            except Exception as e:
+                ocr_text = f"OCR error: {e}"
+    else:
+        # If image is in session, get OCR text from session if available
+        ocr_text = session.get('ocr_text')
     if request.method == 'POST':
         try:
             portion_start_grams = int(request.form.get('portion_start_grams', 0))
@@ -155,7 +173,10 @@ def index():
     from datetime import date
     default_start_date = date.today().strftime('%Y-%m-%d')
     default_weekday = 'Monday'
-    return render_template('index.html', result=result, error=error, weekdays=WEEKDAYS, highlight=highlight or default_weekday, uploaded_image=uploaded_image, default_start_date=default_start_date)
+    # Clear OCR text from session after displaying
+    if 'ocr_text' in session:
+        session['ocr_text'] = None
+    return render_template('index.html', result=result, error=error, weekdays=WEEKDAYS, highlight=highlight or default_weekday, uploaded_image=uploaded_image, default_start_date=default_start_date, ocr_text=ocr_text)
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')

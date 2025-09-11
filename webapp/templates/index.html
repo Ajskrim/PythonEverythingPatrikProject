@@ -87,5 +87,9 @@
             {% endfor %}
         </table>
     {% endif %}
+        {% if ocr_text %}
+            <h3>Extracted Text (OCR):</h3>
+            <pre style="background:#f8f8f8;padding:10px;border-radius:5px;">{{ ocr_text }}</pre>
+        {% endif %}
 </body>
 </html>
