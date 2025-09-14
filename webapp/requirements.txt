@@ -3,3 +3,4 @@ gunicorn
 tkcalendar
 Pillow
 pytesseract
+gunicorn
