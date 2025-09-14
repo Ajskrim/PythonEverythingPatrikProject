@@ -12,6 +12,7 @@ COPY . /app
 
 # Install Python dependencies
 RUN pip install --upgrade pip
+RUN pip install -r webapp/requirements.txt
 RUN pip install -r requirements.txt
 
 # Expose port (default Flask port)
