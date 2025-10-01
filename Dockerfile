@@ -1,8 +1,7 @@
 # Use official Python slim image
 FROM python:3.11-slim
 
-# Install Tesseract OCR
-RUN apt-get update && apt-get install -y tesseract-ocr
+## OCR functionality removed; no Tesseract installation needed
 
 # Set working directory
 WORKDIR /app
